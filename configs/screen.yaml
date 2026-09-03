@@ -1,4 +1,6 @@
-# Three-seed nips_task34 screen. User runs this after smoke validation.
+# LEGACY v0.1 configuration: it does not implement v0.2 IAP train label-edit
+# or v0.2 all-skill/hierarchy-aware LGT. Do not use it for the approved v0.2 study.
+# Three-seed NIPS configuration retained only until v0.2 configs are implemented.
 phase: screen
 output_dir: outputs
 

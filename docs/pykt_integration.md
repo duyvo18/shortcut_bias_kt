@@ -1,40 +1,46 @@
-# Cách dự án tích hợp với pyKT
+# Ranh giới tích hợp pyKT v0.2
 
-Thí điểm dùng gói `pykt-toolkit==0.0.38` trong môi trường do uv quản lý. Mã
-pyKT không được chép vào dự án này.
+## Phân công
 
-## 1. pyKT phụ trách phần nào?
+pyKT cung cấp preprocessing, split, loader và model primitives cho DKT/SAINT/AKT.
+Dự án giữ ownership đối với raw-event table, mapping all-skill, fold audit,
+label-edit IAP, relation index LGT, invariants và reporting.
 
-pyKT cung cấp:
+Repository khóa `pykt-toolkit==0.0.38`. Khi tham khảo mã pyKT mới hơn, phải kiểm
+lại API tương thích với phiên bản đã khóa trước khi gọi.
 
-- tiền xử lý dữ liệu thô thành `data.txt`;
-- chia fold và tạo sequence chuẩn;
-- lớp mô hình DKT, SAINT và AKT;
-- vòng huấn luyện, đánh giá cơ bản và lưu trạng thái mô hình.
+## Dataset trong panel
 
-## 2. Dự án này phụ trách phần nào?
+### Eedi / `nips_task34`
 
-Dự án phụ trách:
+Adapter tiếp tục gọi preprocess Eedi với raw train file và metadata directory.
+Ngoài artifact pyKT, v0.2 phải đọc và lưu mapping raw QuestionId → toàn bộ
+SubjectId, cùng metadata hierarchy subject. Model có thể dùng representation
+level 3 của pyKT; LGT không được mất những subject còn lại.
 
-- cấu hình YAML;
-- bảng sự kiện chuẩn và định danh mục tiêu;
-- hồ sơ tín hiệu tính từ train;
-- cặp probe đối chứng;
-- dự đoán tại mục tiêu được bảo vệ và báo cáo trường hợp.
+### `algebra2005`
 
-## 3. Đường dẫn dữ liệu
+Adapter mới phải gọi preprocess Algebra2005 và giữ raw mapping:
 
-YAML hiện trỏ tới bản Eedi đang có trong workspace để có thể tái hiện lần chạy
-hiện tại. Khi dùng bản tải theo hướng dẫn pyKT, cần sửa `raw_path` và
-`metadata_dir`. Không trộn file huấn luyện với thông tin mô tả từ hai bản tải khác nhau.
+- item = `Problem Name + Step Name`;
+- KC list = `KC(Default)`;
+- response = `Correct First Attempt`;
+- timestamp = `First Transaction Time`.
 
-Bộ kết nối NIPS gọi trực tiếp bộ tiền xử lý cấp thấp của pyKT vì pyKT 0.0.38
-mặc định tìm thông tin mô tả bên trong thư mục của file dữ liệu gốc, trong khi
-cấu trúc Eedi thường đặt `train_data/` và `metadata/` cạnh nhau.
+Không được thêm `assist2009` vào workflow v0.2.
 
-## 4. GPU và CPU
+## Multi-skill và question-level output
 
-Máy chủ có RTX 3060 với 12 GiB VRAM và trình điều khiển báo tương thích CUDA
-13.2. Mô hình và quá trình huấn luyện phải chạy trên CUDA. Tiền xử lý CSV và
-bảng dữ liệu có thể dùng CPU; các vòng lặp Python tuần tự của pyKT không tự
-động chạy song song chỉ vì tăng số luồng.
+pyKT có thể mở rộng/nhân bản interaction nhiều KC để huấn luyện theo concept.
+Điều đó không làm các bản sao trở thành raw question-event độc lập. Prior IAP,
+local evidence, LGT eligibility và intervention manifest phải tham chiếu raw
+event và full KC list; chỉ forward model mới được dùng dòng expanded tương ứng.
+
+## Dataset-specific LGT mode
+
+| Dataset | Mode | Rule |
+|---|---|---|
+| Eedi | `hierarchy_aware` | Exclude same, ancestor, descendant, sibling, same question và mọi raw event có một skill không đạt |
+| Algebra2005 | `exact_unrelated` | Exclude same question và mọi raw event có skill giao target list; không suy luận hierarchy |
+
+Các mode này không được gộp effect size vào cùng một ước lượng.

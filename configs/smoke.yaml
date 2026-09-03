@@ -1,4 +1,6 @@
-# Short, one-seed configuration. Preprocessing is still potentially expensive.
+# LEGACY v0.1 configuration: it does not implement v0.2 IAP train label-edit
+# or v0.2 all-skill/hierarchy-aware LGT. Do not use it for the approved v0.2 study.
+# Short, one-seed configuration retained only for technical migration tests.
 phase: smoke
 output_dir: outputs
 
