@@ -1,6 +1,7 @@
 # KẾ HOẠCH — Thí điểm kiểm tra sơ khảo các tín hiệu tắt trong truy vết tri thức
 
-**Trạng thái:** thiết kế thực nghiệm v0.2 đã chốt; code hiện tại vẫn là pipeline v0.1 và phải được cập nhật trước khi chạy.
+**Trạng thái:** thiết kế và implementation v0.2 đã sẵn sàng; cần qua feasibility
+gate dữ liệu trước workload huấn luyện đầy đủ.
 **Cập nhật:** 03/09/2026
 **Phạm vi:** Chuyên đề 1 (CĐ1), kiểm định sơ khảo; không phải benchmark công bố hay thực nghiệm kết luận của luận án.
 
@@ -199,7 +200,8 @@ IAP artifact phải có prior gốc/đích/đạt được, ID label train thay 
 
 ## 9. Trạng thái triển khai
 
-Mã nguồn trong repository hiện vẫn hiện thực IAP v0.1 bằng cách đổi local prefix test, và LGT v0.1 bằng điều kiện `concept_id != target`. Do đó **không được chạy CLI hiện tại để tạo kết quả theo v0.2**. Hạng mục code cần làm được liệt kê tại [`IMPLEMENTATION.md`](IMPLEMENTATION.md); protocol chi tiết nằm ở [`docs/probe_protocol.md`](docs/probe_protocol.md).
+Mã nguồn hiện dùng IAP train label-edit và LGT all-skill relation gate. Chỉ chạy
+screen sau khi smoke xác nhận raw-event mapping, metadata Eedi và GPU hoạt động.
 
 ## 10. Tài liệu liên quan
 

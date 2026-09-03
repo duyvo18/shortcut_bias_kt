@@ -1,6 +1,4 @@
-# LEGACY v0.1 configuration: it does not implement v0.2 IAP train label-edit
-# or v0.2 all-skill/hierarchy-aware LGT. Do not use it for the approved v0.2 study.
-# Short, one-seed configuration retained only for technical migration tests.
+# v0.2 technical smoke: both datasets, all baselines, one IAP treatment item.
 phase: smoke
 output_dir: outputs
 
@@ -10,6 +8,11 @@ data:
     raw_path: datasets/dataset Eedi NeurIPS 2020/data_extracted/data/train_data/train_task_3_4.csv
     metadata_dir: datasets/dataset Eedi NeurIPS 2020/data_extracted/data/metadata
     task_name: task_3_4
+    min_seq_len: 3
+    maxlen: 200
+    kfold: 5
+  - name: algebra2005
+    raw_path: datasets/Algebra_2005_2006/algebra_2005_2006_train.txt
     min_seq_len: 3
     maxlen: 200
     kfold: 5
@@ -26,6 +29,7 @@ thresholds:
   max_probe_fraction: 0.25
   bootstrap_replicates: 1000
   max_targets: 256
+  iap_max_items: 1
 
 train:
   models: [dkt, saint, akt]

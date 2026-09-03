@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+from .concept_relations import ConceptRelations
 
 
 @dataclass(frozen=True)
@@ -35,43 +36,36 @@ def _replace_positions(prefix: pd.DataFrame, positions: np.ndarray, value: int) 
     return out
 
 
-def build_iap_pair(
-    prefix: pd.DataFrame,
-    target: pd.Series,
-    spec: ProbeSpec,
-) -> dict[str, pd.DataFrame]:
-    """Build local-good/local-poor variants while keeping target metadata fixed."""
-    _check_prefix(prefix, target)
-    concept = target["concept_id"]
-    positions = np.flatnonzero(prefix["concept_id"].to_numpy() == concept)[-spec.recent_k :]
-    if len(positions) < spec.recent_k:
-        raise ValueError("Prefix does not satisfy local support for IAP-01")
-    return {
-        "natural": prefix.copy(deep=True),
-        "plus": _replace_positions(prefix, positions, 1),
-        "minus": _replace_positions(prefix, positions, 0),
-    }
-
-
 def build_lgt_pair(
     prefix: pd.DataFrame,
     target: pd.Series,
     spec: ProbeSpec,
-) -> dict[str, pd.DataFrame]:
-    """Build remote-good/remote-poor variants while preserving local history."""
+    relations: ConceptRelations | None = None,
+) -> tuple[dict[str, pd.DataFrame], dict[str, object]]:
+    """Change only all-skill-unrelated, different-question history events."""
     _check_prefix(prefix, target)
-    concept = target["concept_id"]
-    remote_positions = np.flatnonzero(prefix["concept_id"].to_numpy() != concept)
+    relations = relations or ConceptRelations.exact_only()
+    target_skills = tuple(target["concept_ids"])
+    candidates: list[int] = []
+    audit: list[dict[str, object]] = []
+    for position, event in prefix.reset_index(drop=True).iterrows():
+        allowed, pair_relations = relations.event_is_unrelated(event["concept_ids"], target_skills)
+        different_question = str(event["question_id"]) != str(target["question_id"])
+        audit.append({"event_id": event["event_id"], "relations": pair_relations, "eligible": allowed and different_question})
+        if allowed and different_question:
+            candidates.append(position)
+    remote_positions = np.asarray(candidates, dtype=int)
     if len(remote_positions) < 2:
         raise ValueError("Prefix does not satisfy remote support for LGT-01")
     n_changed = max(1, int(np.ceil(len(remote_positions) * spec.remote_fraction)))
     rng = np.random.default_rng(spec.seed)
     changed = np.sort(rng.choice(remote_positions, size=n_changed, replace=False))
-    return {
+    variants = {
         "natural": prefix.copy(deep=True),
         "plus": _replace_positions(prefix, changed, 1),
         "minus": _replace_positions(prefix, changed, 0),
     }
+    return variants, {"changed_event_ids": prefix.iloc[changed]["event_id"].astype(str).tolist(), "relation_mode": relations.mode, "relation_audit": audit}
 
 
 def validate_pair(

@@ -3,16 +3,9 @@
 ## Trạng thái
 
 Tài liệu này là hợp đồng để nâng code lên thiết kế v0.2 trong [PLAN.md](PLAN.md).
-Repository hiện vẫn là **v0.1**:
-
-- IAP đổi local response trong prefix test thay vì label train;
-- LGT dùng điều kiện một concept ID khác target;
-- canonical data bỏ các skill còn lại của event nhiều skill;
-- adapter mới hỗ trợ Eedi và ASSISTments, chưa hỗ trợ Algebra2005.
-
-Vì vậy không được chạy CLI hiện tại như một thực nghiệm v0.2. Không xoá pipeline
-v0.1 cho đến khi v0.2 có test thay thế, nhưng không được ghi artifact v0.1 dưới
-tên IAP-01/LGT-01 v0.2.
+Repository hiện triển khai **v0.2**: IAP ghi arm label-edit của train và
+retrain theo item/arm; LGT dùng all-skill relation gate; canonical record giữ
+`concept_ids`; và adapter panel hỗ trợ Eedi + Algebra2005.
 
 ## 1. Phạm vi đã khóa
 
@@ -122,4 +115,5 @@ các ID đó đều bất biến.
 Dependency vẫn khóa tại `pykt-toolkit==0.0.38`, Python 3.11 và CUDA bắt buộc.
 Không sửa tay `pyproject.toml`; nếu cần dependency mới dùng `uv add`. Cấu hình
 CPU/GPU và lệnh kiểm tra môi trường hiện có vẫn áp dụng, nhưng config hiện hành
-là config v0.1 và chưa đủ để chạy v0.2.
+là config v0.2; `smoke` giới hạn một IAP item/dataset còn `screen` chạy toàn bộ
+item đủ điều kiện.

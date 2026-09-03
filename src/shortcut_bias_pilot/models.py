@@ -69,6 +69,7 @@ def train_with_pykt(
     train: Any,
     seed: int,
     output_dir: str | Path,
+    checkpoint_dir: str | Path | None = None,
 ) -> Path:
     """Train one baseline with pyKT's standard train loop.
 
@@ -101,7 +102,7 @@ def train_with_pykt(
     if next(model.parameters()).device.type != "cuda":
         raise RuntimeError("pyKT model was not initialized on CUDA")
     optimizer = torch.optim.Adam(model.parameters(), lr=train.learning_rate)
-    checkpoint_dir = Path(output_dir) / dataset_name / model_name / f"seed_{seed}" / f"fold_{train.fold}"
+    checkpoint_dir = Path(checkpoint_dir) if checkpoint_dir is not None else Path(output_dir) / dataset_name / model_name / f"seed_{seed}" / f"fold_{train.fold}"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     train_model(
         model,

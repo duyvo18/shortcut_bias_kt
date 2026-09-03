@@ -42,6 +42,7 @@ class ThresholdConfig:
     max_probe_fraction: float = 0.25
     bootstrap_replicates: int = 1000
     max_targets: int | None = None
+    iap_max_items: int | None = None
 
 
 @dataclass(frozen=True)
@@ -115,6 +116,8 @@ class PilotConfig:
             raise ValueError("max_probe_fraction must be in (0, 1]")
         if self.thresholds.max_targets is not None and self.thresholds.max_targets < 1:
             raise ValueError("max_targets must be positive when provided")
+        if self.thresholds.iap_max_items is not None and self.thresholds.iap_max_items < 1:
+            raise ValueError("iap_max_items must be positive when provided")
         if self.train.fold < 0:
             raise ValueError("fold must be non-negative")
         if self.train.device != "cuda":

@@ -13,14 +13,13 @@ lại API tương thích với phiên bản đã khóa trước khi gọi.
 
 ### Eedi / `nips_task34`
 
-Adapter tiếp tục gọi preprocess Eedi với raw train file và metadata directory.
-Ngoài artifact pyKT, v0.2 phải đọc và lưu mapping raw QuestionId → toàn bộ
-SubjectId, cùng metadata hierarchy subject. Model có thể dùng representation
-level 3 của pyKT; LGT không được mất những subject còn lại.
+Adapter gọi preprocess Eedi với raw train file và metadata directory, đồng thời
+đọc subject metadata để dựng hierarchy relation index. Model forward dùng
+`concept_id` primary của pyKT, nhưng LGT giữ toàn bộ `concept_ids` của event.
 
 ### `algebra2005`
 
-Adapter mới phải gọi preprocess Algebra2005 và giữ raw mapping:
+Adapter gọi preprocess Algebra2005; pyKT tạo item từ:
 
 - item = `Problem Name + Step Name`;
 - KC list = `KC(Default)`;

@@ -18,6 +18,7 @@ CANONICAL_COLUMNS = (
     "learner_id",
     "question_id",
     "concept_id",
+    "concept_ids",
     "response",
     "timestamp",
     "fold",
@@ -35,9 +36,9 @@ def load_pykt_sequences(path: str | Path, *, include_fold: int | None = None) ->
 
     ``pyKT`` represents one learner sequence per row and stores fields as
     comma-separated strings. Padded values (``-1``) are removed. Multi-KC
-    values should normally already be expanded by pyKT's sequence splitter;
-    if not, the first KC is used and a warning-free deterministic fallback is
-    applied because the pilot requires one target concept per event.
+    values may encode multiple KCs using ``_``.  ``concept_id`` remains the
+    deterministic model-facing KC required by pyKT; ``concept_ids`` is the
+    complete raw-event KC list and is mandatory for all eligibility decisions.
     """
     source = Path(path)
     frame = pd.read_csv(source)
@@ -60,6 +61,9 @@ def load_pykt_sequences(path: str | Path, *, include_fold: int | None = None) ->
                 continue
             timestamp = timestamps[position] if position < len(timestamps) else "NA"
             sequence_id = f"{source.stem}:{row_number}"
+            concept_ids = tuple(part for part in concepts[position].split("_") if part and part != "-1")
+            if not concept_ids:
+                continue
             records.append(
                 {
                     "sequence_id": sequence_id,
@@ -67,7 +71,8 @@ def load_pykt_sequences(path: str | Path, *, include_fold: int | None = None) ->
                     "event_id": f"{sequence_id}:{position}",
                     "learner_id": learner,
                     "question_id": question,
-                    "concept_id": concepts[position].split("_")[0],
+                    "concept_id": concept_ids[0],
+                    "concept_ids": concept_ids,
                     "response": int(float(responses[position])),
                     "timestamp": timestamp,
                     "fold": int(row["fold"]) if "fold" in row and pd.notna(row["fold"]) else -1,

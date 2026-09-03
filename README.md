@@ -2,9 +2,8 @@
 
 ## Trạng thái
 
-Thiết kế thực nghiệm **v0.2** đã được chốt, nhưng code hiện có mới hiện thực
-probe v0.1. Không dùng các lệnh CLI hiện tại để tạo kết quả v0.2 cho đến khi các
-hạng mục trong [IMPLEMENTATION.md](IMPLEMENTATION.md) hoàn tất.
+Code hiện triển khai thiết kế thực nghiệm **v0.2**. IAP là label-edit ở train;
+LGT là can thiệp inference sau all-skill relation audit.
 
 Mục tiêu là kiểm tra độ nhạy của model trong can thiệp đã khóa; một effect không
 tự động chứng minh dataset/model có shortcut bias. Độ khó item và năng lực chung

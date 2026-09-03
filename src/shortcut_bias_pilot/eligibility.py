@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pandas as pd
+from .concept_relations import ConceptRelations
 
 from .profiles import ItemPriorProfile
 
@@ -14,6 +15,7 @@ def make_targets(
     local_min_support: int = 3,
     remote_min_support: int = 5,
     max_targets: int | None = None,
+    relations: ConceptRelations | None = None,
 ) -> tuple[pd.DataFrame, dict[str, tuple[pd.DataFrame, pd.Series]]]:
     """Create natural targets and strict prefixes from canonical test events.
 
@@ -22,30 +24,26 @@ def make_targets(
     """
     target_rows: list[dict] = []
     context: dict[str, tuple[pd.DataFrame, pd.Series]] = {}
+    relations = relations or ConceptRelations.exact_only()
     for sequence_id, sequence in sequences.groupby("sequence_id", sort=False):
         sequence = sequence.sort_values("position").reset_index(drop=True)
-        local_counts: dict[object, int] = {}
-        local_sums: dict[object, int] = {}
-        local_recent: dict[object, list[int]] = {}
+        local_events: list[pd.Series] = []
         total_sum = 0
         for position in range(1, len(sequence)):
             target = sequence.iloc[position].copy()
-            concept = target["concept_id"]
-            n_local = local_counts.get(concept, 0)
-            n_remote = position - n_local
-            local_sum = local_sums.get(concept, 0)
-            remote_sum = total_sum - local_sum
-            recent = local_recent.get(concept, [])
+            target_skills = tuple(target["concept_ids"])
+            prefix = sequence.iloc[:position]
+            local_mask = prefix["concept_ids"].map(lambda values: bool(set(values) & set(target_skills)))
+            local = prefix[local_mask]
+            remote_mask = prefix.apply(lambda event: str(event["question_id"]) != str(target["question_id"]) and relations.event_is_unrelated(event["concept_ids"], target_skills)[0], axis=1)
+            remote = prefix[remote_mask]
+            n_local, n_remote = len(local), len(remote)
+            recent = local.tail(local_min_support)["response"].tolist()
+            remote_sum = int(remote["response"].sum())
             eligible_iap = n_local >= local_min_support
             eligible_lgt = n_remote >= remote_min_support and n_local < local_min_support
             if not eligible_iap and not eligible_lgt:
                 response = int(target["response"])
-                total_sum += response
-                local_counts[concept] = n_local + 1
-                local_sums[concept] = local_sum + response
-                local_recent[concept] = (recent + [response])[-local_min_support:]
-                continue
-            if not eligible_iap and not eligible_lgt:
                 continue
             event_id = str(target["event_id"])
             row = target.to_dict()
@@ -64,10 +62,6 @@ def make_targets(
             target_rows.append(row)
             context[event_id] = (sequence, position)
             response = int(target["response"])
-            total_sum += response
-            local_counts[concept] = n_local + 1
-            local_sums[concept] = local_sum + response
-            local_recent[concept] = (recent + [response])[-local_min_support:]
     targets = pd.DataFrame(target_rows)
     if targets.empty:
         raise ValueError("No eligible natural test targets found")

@@ -15,10 +15,14 @@ def pair_deltas(predictions: pd.DataFrame) -> pd.DataFrame:
     wide = predictions.pivot_table(
         index="base_target_id", columns="variant", values="prediction", aggfunc="first"
     )
-    if not {"plus", "minus"}.issubset(wide.columns):
-        raise ValueError("Both plus and minus variants are required")
+    if {"plus", "minus"}.issubset(wide.columns):
+        positive, negative = "plus", "minus"
+    elif {"prior_high", "prior_low"}.issubset(wide.columns):
+        positive, negative = "prior_high", "prior_low"
+    else:
+        raise ValueError("Both plus/minus or prior_high/prior_low variants are required")
     result = wide.reset_index()
-    result["delta"] = result["plus"] - result["minus"]
+    result["delta"] = result[positive] - result[negative]
     return result
 
 
